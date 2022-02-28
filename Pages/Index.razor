@@ -1,0 +1,79 @@
+﻿@page "/"
+
+@using Syncfusion.Blazor.Buttons
+@using Syncfusion.Blazor.Inputs
+@using System.Runtime.Serialization
+@using System.Reflection
+
+<div class="container">
+    <div class="row">
+        <SfTextBox Placeholder="Search Icons..." ShowClearButton="true" OnInput="OnSearchIcons" ValueChange="OnSearchText"></SfTextBox>
+    </div>
+    <div class="row py-4">
+        <h4 class="text-info">Available Icons</h4>
+    </div>
+    <div class="row justify-content-start gap-5">
+        @if (IconDatas.Count > 0)
+        {
+            @foreach (IconSearch item in IconDatas)
+            {
+                <div class="card">
+                    <div class="card-body text-center text-secondary">
+                        <SfIcon Name="@item.Name" Size="IconSize.Large"></SfIcon>
+                        <h6 class="card-subtitle mt-2">@item.Text</h6>
+                    </div>
+                </div>
+            }
+        }
+        else
+        {
+            <span class="text-danger">No matching results found.</span>
+        }
+    </div>
+</div>
+
+<style>
+    .card {
+        border: 0;
+        width: 140px;
+    }
+</style>
+
+@code {
+    public class IconSearch
+    {
+        public IconName Name { get; set; }
+        public string Text { get; set; }
+    }
+    List<IconSearch> TotalIcons = new List<IconSearch>();
+    List<IconSearch> IconDatas = new List<IconSearch>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        TotalIcons = new List<IconSearch>();
+        foreach (IconName icon in Enum.GetValues(typeof(IconName)))
+        {
+            FieldInfo iconField = icon.GetType().GetField(icon.ToString());
+            string iconName = iconField.GetCustomAttribute<EnumMemberAttribute>().Value;
+            TotalIcons.Add(new IconSearch() { Name = icon, Text = iconName });
+        }
+        IconDatas = TotalIcons;
+        await base.OnInitializedAsync();
+    }
+
+    public void OnSearchIcons(ChangeEventArgs EventArgs)
+    {
+        OnFilterIcons(Convert.ToString(EventArgs.Value));
+    }
+
+    public void OnSearchText(ChangedEventArgs EventArgs)
+    {
+        OnFilterIcons(EventArgs.Value);
+    }
+
+    public void OnFilterIcons(string IconName)
+    {
+        IconDatas = TotalIcons.FindAll(icon => icon.Text.Contains(IconName ?? "", StringComparison.OrdinalIgnoreCase));
+    }
+
+}
